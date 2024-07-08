@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cardId;
+    private Long cartId;
 
     @OneToOne
     @JoinColumn(name = "user_id")
