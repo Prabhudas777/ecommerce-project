@@ -18,7 +18,6 @@ public class CartController {
 
     @Autowired
     private CartRepository cartRepository;
-
     @Autowired
     private AuthUtil authUtil;
     @Autowired
