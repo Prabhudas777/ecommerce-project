@@ -42,4 +42,14 @@ public class AddressController {
         List<AddressDTO> userAddresses=addressService.getUserAddresses(authUtil.loggedInUser());
         return new ResponseEntity<>(userAddresses,HttpStatus.OK);
     }
+    @PutMapping("/addresses/{addressId}")
+    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Long addressId, @RequestBody AddressDTO addressDTO){
+        AddressDTO updatedAddress = addressService.updateAddress(addressDTO,addressId);
+        return new ResponseEntity<>(updatedAddress,HttpStatus.OK);
+    }
+    @DeleteMapping("/addresses/delete/{addressId}")
+    public ResponseEntity<String> deleteAddress(@PathVariable Long addressId){
+        String response = addressService.deleteAddress(addressId);
+        return new ResponseEntity<>(response,HttpStatus.OK);
+    }
 }

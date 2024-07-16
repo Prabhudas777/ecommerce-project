@@ -5,6 +5,7 @@ import com.ecommerce.project.model.Address;
 import com.ecommerce.project.model.User;
 import com.ecommerce.project.payload.AddressDTO;
 import com.ecommerce.project.repository.AddressRepository;
+import com.ecommerce.project.repository.UserRepository;
 import com.ecommerce.project.service.AddressService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Autowired
     AddressRepository addressRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     ModelMapper modelMapper;
@@ -48,5 +52,31 @@ public class AddressServiceImpl implements AddressService {
     public List<AddressDTO> getUserAddresses(User user) {
         List<Address> addresses = user.getAddresses();
         return addresses.stream().map(e -> modelMapper.map(e, AddressDTO.class)).toList();
+    }
+
+    @Override
+    public AddressDTO updateAddress(AddressDTO addressDTO, Long addressId) {
+        Address addressFromDb = addressRepository.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+        addressFromDb.setStreet(addressDTO.getStreet());
+        addressFromDb.setCity(addressDTO.getCity());
+        addressFromDb.setCountry(addressDTO.getCountry());
+        addressFromDb.setBuildingName(addressDTO.getBuildingName());
+        addressFromDb.setPinCode(addressDTO.getPinCode());
+        Address updatedAddress = addressRepository.save(addressFromDb);
+        User user = addressFromDb.getUser();
+        user.getAddresses().removeIf(e->e.getAddressId().equals(addressId));
+        user.getAddresses().add(updatedAddress);
+        userRepository.save(user);
+        return modelMapper.map(updatedAddress,AddressDTO.class);
+    }
+
+    @Override
+    public String deleteAddress(Long addressId) {
+        Address addressFromDb = addressRepository.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+        User user = addressFromDb.getUser();
+        user.getAddresses().removeIf(e->e.getAddressId().equals(addressId));
+        userRepository.save(user);
+        addressRepository.delete(addressFromDb);
+        return "Address Deleted Successfully with Id : "+addressId;
     }
 }
