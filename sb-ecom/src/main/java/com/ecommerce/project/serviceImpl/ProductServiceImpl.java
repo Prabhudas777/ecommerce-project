@@ -1,5 +1,6 @@
 package com.ecommerce.project.serviceImpl;
 
+import com.ecommerce.project.exceptions.APIException;
 import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.model.Product;
@@ -10,6 +11,10 @@ import com.ecommerce.project.repository.ProductRepository;
 import com.ecommerce.project.service.ProductService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,12 +38,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        List<ProductDTO> productDTOS = products.stream()
+    public ProductResponse getAllProducts(Integer pageNumber,Integer pageSize,String sortBy,String sortDir) {
+        Sort sortByAndDirection = sortDir.equals("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNumber,pageSize,sortByAndDirection);
+        Page<Product> products = productRepository.findAll(pageable);
+        List<Product> productList = products.getContent();
+        if(productList.isEmpty())
+            throw new APIException("Product List is Empty, Please add the Products!!");
+        List<ProductDTO> productDTOS = productList.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class)).toList();
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOS);
+        productResponse.setLastPage(products.isLast());
+        productResponse.setPageNumber(products.getNumber());
+        productResponse.setTotalElements(products.getTotalElements());
+        productResponse.setPageSize(products.getSize());
         return productResponse;
     }
 
